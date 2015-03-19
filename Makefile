@@ -4,6 +4,7 @@ GENOME = genome.fasta
 
 # Directories and parameters
 FASTQC = FastQC/fastqc 
+TRIM5 = 9
 
 # Anything below this point should not be changed
 
@@ -44,9 +45,46 @@ $(GIDX): $(GENOME)
 SAM = genome.sam.gz
 
 $(SAM): $(TREAD) $(GIDX)
-	bowtie2 -x genome -U $(TREAD) -t --trim5 9 --al-gz mapped.gz --un-gz unmapped.gz | gzip --stdout > $(SAM)
+	bowtie2 -x genome -U $(TREAD) -t --trim5 $(TRIM5) --al-gz mapped.gz --un-gz unmapped.gz | gzip --stdout > $(SAM)
 align: $(SAM)
 
-all: fastqc trim align
+# WIG files
+# (counts)
+FBAM = aln.f.bam
+RBAM = aln.r.bam
 
-.PHONY: all fastqc trim align
+$(FBAM): $(SAM)
+	samtools view -F 0x10 -b -o $(FBAM) -S $(SAM)
+$(RBAM): $(SAM)
+	samtools view -f 0x10 -b -o $(RBAM) -S $(SAM)
+
+FSORT = aln.sorted.f.bam
+RSORT = aln.sorted.r.bam
+$(FSORT): $(FBAM)
+	samtools sort $(FBAM) $(basename $(FSORT))
+$(RSORT): $(RBAM)
+	samtools sort $(RBAM) $(basename $(RSORT))
+
+FWIG = aln.sorted.f.bigwig
+RWIG = aln.sorted.r.bigwig
+
+TOWIG = bam_to_wiggle.py
+TOBIG = wigToBigWig
+
+$(TOWIG):
+	wget https://raw.githubusercontent.com/chapmanb/bcbio-nextgen/master/scripts/utils/bam_to_wiggle.py && \
+	sed -i 's/wigToBigWig/.\/wigToBigWig/g' $(TOWIG)
+
+$(TOBIG):
+	wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/wigToBigWig && \
+	chmod 755 $(TOBIG)
+
+$(FWIG): $(FSORT) $(TOWIG) $(TOBIG)
+	python2 bam_to_wiggle.py $(FSORT) --normalize
+$(RWIG): $(RSORT) $(TOWIG) $(TOBIG)
+	python2 bam_to_wiggle.py $(RSORT) --normalize
+counts: $(FWIG) $(RWIG)
+
+all: fastqc trim align counts
+
+.PHONY: all fastqc trim align counts
