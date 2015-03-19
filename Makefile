@@ -85,6 +85,13 @@ $(RWIG): $(RSORT) $(TOWIG) $(TOBIG)
 	python2 bam_to_wiggle.py $(RSORT) --normalize
 counts: $(FWIG) $(RWIG)
 
-all: fastqc trim align counts
+# Stats
+STATS = genome.stats.tsv
 
-.PHONY: all fastqc trim align counts
+$(STATS): $(SAM) $(FSORT) $(RSORT)
+	zcat unmapped.gz | $(SRCDIR)/get_stats genome $(FSORT) $(RSORT) > $(STATS) || rm $(STATS)
+stats: $(STATS)
+
+all: fastqc trim align counts stats
+
+.PHONY: all fastqc trim align counts stats
