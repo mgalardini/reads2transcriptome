@@ -18,7 +18,7 @@ Notes
 Prerequisites
 -------------
 
-* Python + Biopython + bcbio-nextgen + pysam
+* Python + Biopython + bcbio-nextgen + pysam + bx-python
 * FastQC
 * seq_crumbs
 * bowtie2
