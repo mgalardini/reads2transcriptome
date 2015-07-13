@@ -67,9 +67,12 @@ $(RSORT): $(RBAM)
 
 FWIG = aln.sorted.f.bigwig
 RWIG = aln.sorted.r.bigwig
+FBED = aln.sorted.f.bed
+RBED = aln.sorted.r.bed
 
 TOWIG = bam_to_wiggle.py
 TOBIG = wigToBigWig
+TOBED = bigWigToBedGraph
 
 $(TOWIG):
 	wget https://raw.githubusercontent.com/chapmanb/bcbio-nextgen/master/scripts/utils/bam_to_wiggle.py && \
@@ -79,11 +82,20 @@ $(TOBIG):
 	wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/wigToBigWig && \
 	chmod 755 $(TOBIG)
 
+$(TOBED):
+	wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/bigWigToBedGraph && \
+	chmod 755 $(TOBED)
+
 $(FWIG): $(FSORT) $(TOWIG) $(TOBIG)
 	python2 bam_to_wiggle.py $(FSORT) --normalize
 $(RWIG): $(RSORT) $(TOWIG) $(TOBIG)
 	python2 bam_to_wiggle.py $(RSORT) --normalize
-counts: $(FWIG) $(RWIG)
+
+$(FBED): $(FWIG) $(TOBED)
+	./$(TOBED) $(FWIG) $(FBED)
+$(RBED): $(RWIG) $(TOBED)
+	./$(TOBED) $(RWIG) $(RBED)
+counts: $(FBED) $(RBED)
 
 # Stats
 STATS = genome.stats.tsv
