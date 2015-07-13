@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+# Copyright (C) <2015> EMBL-European Bioinformatics Institute
+
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+
+# Neither the institution name nor the name compare_bigwig
+# can be used to endorse or promote products derived from
+# this software without prior written permission.
+# For written permission, please contact <marco@ebi.ac.uk>.
+
+# Products derived from this software may not be called compare_bigwig
+# nor may compare_bigwig appear in their names without prior written
+# permission of the developers. You should have received a copy
+# of the GNU General Public License along with this program.
+# If not, see <http://www.gnu.org/licenses/>.
+
+__author__ = "Marco Galardini"
+__version__ = '0.1.0'
+
+def get_options():
+    import argparse
+
+    # create the top-level parser
+    description = "Compare two bigwig files."
+    parser = argparse.ArgumentParser(description = description,
+                                     prog = 'compare_bigwig')
+
+    parser.add_argument('file1', action='store',
+                        help='BigWig file 1')
+    parser.add_argument('file2', action='store',
+                        help='BigWig file 2')
+
+    parser.add_argument('genome', action='store',
+                        help='Genome Fasta file')
+    
+    parser.add_argument('--version', action='version',
+                         version='%(prog)s '+__version__)
+
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    options = get_options()
+
+    import sys
+    from bx.bbi.bigwig_file import BigWigFile
+    from Bio import SeqIO
+
+    # Open the BigWig files
+    f1 = BigWigFile(open(options.file1, 'rb'))
+    f2 = BigWigFile(open(options.file2, 'rb'))
+
+    # Get chromosome names and sizes
+    for s in SeqIO.parse(options.genome, 'fasta'):
+        sys.stderr.write('%s %d\n'%(s.id, len(s)))
+        # Compare over a 10kbp window
+        # (roughly 100 positions in E. coli)
+        if len(s) < 10000:
+            continue
+        s1 = f1.summarize(s.id, 0, len(s), len(s)/float(10000))
+        s2 = f2.summarize(s.id, 0, len(s), len(s)/float(10000))
+
+        for i1, i2 in zip(s1.sum_data, s2.sum_data):
+            print('\t'.join( (s.id, str(i1), str(i2)) ))
