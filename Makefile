@@ -12,7 +12,7 @@ TRIM5 = 9
 
 # Directories
 SRCDIR = $(CURDIR)/src
-EDGEDIR = $(SOFTDIR)/EDGE_pro_v1.3.1 
+EDGEDIR = $(SOFTDIR)/EDGE_pro_v1.3.1
 
 QCDIR = $(CURDIR)/QC
 $(QCDIR):
