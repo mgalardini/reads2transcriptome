@@ -1,6 +1,8 @@
 # Input files
 READ = READ.txt.gz
 GENOME = genome.fasta
+GPTT = genome.ptt
+GRNT = genome.rnt
 
 # Directories and parameters
 FASTQC = FastQC/fastqc 
@@ -10,6 +12,7 @@ TRIM5 = 9
 
 # Directories
 SRCDIR = $(CURDIR)/src
+EDGEDIR = $(SOFTDIR)/EDGE_pro_v1.3.1 
 
 QCDIR = $(CURDIR)/QC
 $(QCDIR):
@@ -35,6 +38,12 @@ $(TREAD): $(QCREAD) $(READ)
 	mv tmp.txt.gz $(TREAD)
 trim: $(TREAD)
 
+# RPKMs
+RPKM = READ.rpkm_0
+
+$(RPKM): $(TREAD) $(GENOME) $(GPTT) $(GRNT)
+	$(EDGEDIR)/edge.pl -g $(GENOME) -p $(GPTT) -r $(GRNT) -u $(TREAD) -o READ -s $(EDGEDIR)
+
 # Bowtie-index
 GIDX = genome.1.bt2
 
@@ -54,9 +63,9 @@ FBAM = aln.f.bam
 RBAM = aln.r.bam
 
 $(FBAM): $(SAM)
-	samtools view -F 0x10 -b -o $(FBAM) -S $(SAM)
+	samtools view -q 10 -F 0x10 -b -o $(FBAM) -S $(SAM)
 $(RBAM): $(SAM)
-	samtools view -f 0x10 -b -o $(RBAM) -S $(SAM)
+	samtools view -q 10 -f 0x10 -b -o $(RBAM) -S $(SAM)
 
 FSORT = aln.sorted.f.bam
 RSORT = aln.sorted.r.bam
@@ -95,7 +104,7 @@ $(FBED): $(FWIG) $(TOBED)
 	./$(TOBED) $(FWIG) $(FBED)
 $(RBED): $(RWIG) $(TOBED)
 	./$(TOBED) $(RWIG) $(RBED)
-counts: $(FBED) $(RBED)
+counts: $(FBED) $(RBED) $(RPKM)
 
 # Stats
 STATS = genome.stats.tsv
