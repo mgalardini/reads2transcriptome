@@ -104,7 +104,9 @@ $(FBED): $(FWIG) $(TOBED)
 	./$(TOBED) $(FWIG) $(FBED)
 $(RBED): $(RWIG) $(TOBED)
 	./$(TOBED) $(RWIG) $(RBED)
-counts: $(FBED) $(RBED) $(RPKM)
+counts: $(FBED) $(RBED)
+
+rpkm: $(RPKM)
 
 # Stats
 STATS = genome.stats.tsv
@@ -113,6 +115,6 @@ $(STATS): $(SAM) $(FSORT) $(RSORT)
 	zcat unmapped.gz | $(SRCDIR)/get_stats genome $(FSORT) $(RSORT) > $(STATS) || rm $(STATS)
 stats: $(STATS)
 
-all: fastqc trim align counts stats
+all: fastqc trim align counts rpkm stats
 
-.PHONY: all fastqc trim align counts stats
+.PHONY: all fastqc trim align counts rpkm stats
