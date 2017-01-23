@@ -5,14 +5,13 @@ GPTT = genome.ptt
 GRNT = genome.rnt
 
 # Directories and parameters
-FASTQC = FastQC/fastqc 
+SOFTDIR =
+SRCDIR = $(CURDIR)/src
+EDGEDIR = $(SOFTDIR)/EDGE_pro_v1.3.1
+FASTQC = $(SOFTDIR)/FastQC/fastqc 
 TRIM5 = 9
 
 # Anything below this point should not be changed
-
-# Directories
-SRCDIR = $(CURDIR)/src
-EDGEDIR = $(SOFTDIR)/EDGE_pro_v1.3.1
 
 QCDIR = $(CURDIR)/QC
 $(QCDIR):
@@ -23,7 +22,7 @@ QCREAD = $(QCDIR)/$(addsuffix _fastqc.zip, $(shell basename $(notdir $(READ)) .t
 
 $(QCREAD): $(QCDIR) $(READ)
 	$(FASTQC) --outdir $(QCDIR) $(READ)
-fastqc: $(QCREAD)
+qc: $(QCREAD)
 
 # Trim
 TREAD = $(addsuffix .fq.gz, $(shell basename $(notdir $(READ)) .txt.gz))
@@ -41,8 +40,8 @@ trim: $(TREAD)
 # RPKMs
 RPKM = READ.rpkm_0
 
-$(RPKM): $(TREAD) $(GENOME) $(GPTT) $(GRNT)
-	$(EDGEDIR)/edge.pl -g $(GENOME) -p $(GPTT) -r $(GRNT) -u $(TREAD) -o READ -s $(EDGEDIR)
+$(RPKM): $(READ) $(GENOME) $(GPTT) $(GRNT)
+	$(EDGEDIR)/edge.pl -g $(GENOME) -p $(GPTT) -r $(GRNT) -u $(READ) -o READ -s $(EDGEDIR)
 
 # Bowtie-index
 GIDX = genome.1.bt2
@@ -115,6 +114,6 @@ $(STATS): $(SAM) $(FSORT) $(RSORT)
 	zcat unmapped.gz | $(SRCDIR)/get_stats genome $(FSORT) $(RSORT) > $(STATS) || rm $(STATS)
 stats: $(STATS)
 
-all: fastqc trim align counts rpkm stats
+all: qc trim align counts rpkm stats
 
-.PHONY: all fastqc trim align counts rpkm stats
+.PHONY: all qc trim align counts rpkm stats
