@@ -12,17 +12,16 @@ Usage
 Notes
 -----
 
-* You may want to run `make fastqc` first and use its results to tweak the trimming parameters
-    * By default any overrepresented sequence (e.g. adapters) will be trimmed
+* You may want to run `make qc` first and use its results to tweak the trimming parameters
+* By default the TrueSeq3 adapters will be trimmed by Trimmomamtic
 
 Prerequisites
 -------------
 
-* Python + Biopython + bcbio-nextgen + pysam + bx-python
+* Python + Biopython
 * FastQC
-* seq_crumbs
-* bowtie2
-* samtools
+* Trimmomatic
+* kallisto
 
 Copyright
 ---------
