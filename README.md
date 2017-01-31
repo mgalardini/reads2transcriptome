@@ -2,7 +2,7 @@ reads2transcriptome
 ===================
 
 From second generation sequencing reads to nucleotide counts
-This small pipeline works with single illumina reads (no PE), and will output the counts separated by strand. 
+This small pipeline works with single illumina reads (no PE). 
 
 Usage
 -----
