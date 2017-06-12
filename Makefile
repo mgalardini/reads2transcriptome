@@ -13,6 +13,7 @@ QCDIR = $(CURDIR)/QC
 QDIR = $(CURDIR)/kallisto
 KRAKENPARAMS = --fastq-input --gzip-compressed --paired --check-names
 KRAKENDB = kraken
+KCPU = 1
 BOOTSTRAPS = 1000
 FRAGMENT = 130
 FRAGMENTSD  = 70
