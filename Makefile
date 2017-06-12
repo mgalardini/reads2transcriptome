@@ -5,12 +5,14 @@ GENOME = genome.gbk
 # Directories and parameters
 SOFTDIR =
 SRCDIR = $(CURDIR)/src
-FASTQC = $(SOFTDIR)/FastQC/fastqc 
+FASTQC = fastqc 
 TRIMDIR = $(SOFTDIR)/Trimmomatic-0.36
 TRIMMOMATIC = $(TRIMDIR)/trimmomatic-0.36.jar
 ADAPTERS = $(TRIMDIR)/adapters/TruSeq3-SE.fa
 QCDIR = $(CURDIR)/QC
 QDIR = $(CURDIR)/kallisto
+KRAKENPARAMS = --fastq-input --gzip-compressed --paired --check-names
+KRAKENDB = kraken
 BOOTSTRAPS = 1000
 FRAGMENT = 130
 FRAGMENTSD  = 70
@@ -29,6 +31,17 @@ $(QCREAD): $(QCDIR) $(READ)
 	$(FASTQC) --outdir $(QCDIR) $(READ)
 qc: $(QCREAD)
 
+# Kraken (another QC)
+KRAKENOUT = $(QCDIR)/kraken.out
+KRAKEN = $(QCDIR)/kraken.txt
+
+$(KRAKENOUT): $(READ) $(QCDIR)
+	kraken --db $(KRAKENDB) --threads $(KCPU) --fastq-input --gzip-compressed --paired --check-names $< > $@
+
+$(KRAKEN): $(KRAKENOUT)
+	kraken-translate --db $(KRAKENDB) $< | awk -F'\t' '{print $$2}' | sort | uniq -c > $@
+kraken: $(KRAKEN)
+	
 # Index reference
 TRANSCRIPTS = genes.fasta
 $(TRANSCRIPTS): $(GENOME)
@@ -51,6 +64,6 @@ clean:
 	-rm -rf $(QCDIR)
 	-rm -rf $(QDIR)
 
-all: qc index quantify 
+all: qc kraken index quantify 
 
-.PHONY: all qc index quantify clean
+.PHONY: all qc kraken index quantify clean
