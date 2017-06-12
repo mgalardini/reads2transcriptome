@@ -37,7 +37,7 @@ KRAKENOUT = $(QCDIR)/kraken.out
 KRAKEN = $(QCDIR)/kraken.txt
 
 $(KRAKENOUT): $(READ) $(QCDIR)
-	kraken --db $(KRAKENDB) --threads $(KCPU) --fastq-input --gzip-compressed --paired --check-names $< > $@
+	kraken --db $(KRAKENDB) --threads $(KCPU) $(KRAKENPARAMS) $< > $@
 
 $(KRAKEN): $(KRAKENOUT)
 	kraken-translate --db $(KRAKENDB) $< | awk -F'\t' '{print $$2}' | sort | uniq -c > $@
