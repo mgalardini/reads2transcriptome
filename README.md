@@ -20,6 +20,7 @@ Prerequisites
 
 * Python + Biopython
 * FastQC
+* Kraken
 * Trimmomatic
 * kallisto
 
