@@ -9,6 +9,7 @@ FASTQC = fastqc
 TRIMDIR = $(SOFTDIR)/Trimmomatic-0.36
 TRIMMOMATIC = $(TRIMDIR)/trimmomatic-0.36.jar
 ADAPTERS = $(TRIMDIR)/adapters/TruSeq3-SE.fa
+MORETRIMMING = 
 QCDIR = $(CURDIR)/QC
 QDIR = $(CURDIR)/kallisto
 KRAKENPARAMS = --fastq-input --gzip-compressed
@@ -56,7 +57,7 @@ index: $(INDEX)
 # Quantification
 QUANTS = $(QDIR)/abundance.h5
 $(QUANTS): $(INDEX) $(QDIR) $(READ)
-	java -jar $(TRIMMOMATIC) SE $(READ) /dev/stdout ILLUMINACLIP:$(ADAPTERS):2:30:10 | kallisto quant -b 100 -i $(INDEX) -o $(QDIR) --single -l $(FRAGMENT) -s $(FRAGMENTSD) /dev/stdin
+	java -jar $(TRIMMOMATIC) SE $(READ) /dev/stdout ILLUMINACLIP:$(ADAPTERS):2:30:10 $(MORETRIMMING) | kallisto quant -b 100 -i $(INDEX) -o $(QDIR) --single -l $(FRAGMENT) -s $(FRAGMENTSD) /dev/stdin
 quantify: $(QUANTS)
 
 clean:
