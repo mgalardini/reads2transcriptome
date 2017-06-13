@@ -1,6 +1,6 @@
 # Input files
 READ = READ.txt.gz
-GENOME = genome.gbk
+GENOME = genome.gff
 
 # Directories and parameters
 SOFTDIR =
@@ -47,7 +47,7 @@ kraken: $(KRAKEN)
 # Index reference
 TRANSCRIPTS = genes.fasta
 $(TRANSCRIPTS): $(GENOME)
-	$(SRCDIR)/gbk2genes $< > $@
+	$(SRCDIR)/gff2genes $< > $@
 
 INDEX = reference
 $(INDEX): $(TRANSCRIPTS)

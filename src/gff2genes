@@ -34,8 +34,8 @@ def get_options():
     description = "Extract putative transcripts from a genbank file"
     parser = argparse.ArgumentParser(description = description,
                                      prog = 'gbk2genes')
-    parser.add_argument('ingbk', action='store',
-                        help='Input GenBank file')
+    parser.add_argument('ingff', action='store',
+                        help='Input GFF file')
 
     parser.add_argument('--synonym', action='store_true',
         default=False,
@@ -50,13 +50,13 @@ def get_options():
     return parser.parse_args()
 
 if __name__ == "__main__":
-    from Bio import SeqIO
+    from BCBio import GFF
     import sys
     options = get_options()
 
     # Read the input gbk
     unnamed = 1
-    for s in SeqIO.parse(options.ingbk, 'genbank'):
+    for s in GFF.parse(options.ingff):
         for f in filter(lambda x: x.type == 'gene',
                         s.features):
             # Name
