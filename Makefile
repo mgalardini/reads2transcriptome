@@ -55,7 +55,7 @@ index: $(INDEX)
 
 # Quantification
 QUANTS = $(QDIR)/abundance.h5
-$(QUANTS): $(INDEX) $(QDIR)
+$(QUANTS): $(INDEX) $(QDIR) $(READ)
 	java -jar $(TRIMMOMATIC) SE $(READ) /dev/stdout ILLUMINACLIP:$(ADAPTERS):2:30:10 | kallisto quant -b 100 -i $(INDEX) -o $(QDIR) --single -l $(FRAGMENT) -s $(FRAGMENTSD) /dev/stdin
 quantify: $(QUANTS)
 
