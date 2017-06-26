@@ -48,7 +48,7 @@ kraken: $(KRAKEN)
 # Index reference
 TRANSCRIPTS = genes.fasta
 $(TRANSCRIPTS): $(GENOME)
-	$(SRCDIR)/gff2genes $< > $@
+	$(SRCDIR)/gff2genes $< $(ORTHOLOGS) > $@
 
 INDEX = reference
 $(INDEX): $(TRANSCRIPTS)
