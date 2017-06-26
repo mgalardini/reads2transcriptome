@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+
+# Copyright (C) <2015> EMBL-European Bioinformatics Institute
+
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+
+# Neither the institution name nor the name align_upstreams can
+# be used to endorse or promote products derived from this
+# software without prior written permission. For written
+# permission, please contact <marco@ebi.ac.uk>.
+
+# Products derived from this software may not be called
+# align_upstreams nor may align_upstreams appear in their names
+# without prior written permission of the developers.
+# You should have received a copy of the GNU General Public
+# License along with this program. If not, see
+# <http://www.gnu.org/licenses/>.
+
+__author__ = "Marco Galardini"
+__version__ = "0.0.1"
+
+def get_options():
+    import argparse
+
+    # create the top-level parser
+    description = "Extract 1:1 orthologs from one or more orthology files"
+    parser = argparse.ArgumentParser(description = description,
+                                     prog = 'get_orthologs')
+
+    parser.add_argument('orthologs', action='store',
+                        nargs='+',
+                        help='Orthology file')
+
+    parser.add_argument('--version', action='version',
+                         version='%(prog)s '+__version__)
+
+    return parser.parse_args()
+
+def parse_orthologs(infile):
+    d = {}
+    for l in open(infile):
+        if l.strip().startswith('#'):
+            continue
+        orth, prot, org = l.strip().split()
+        d[orth] = d.get(orth, set())
+        d[orth].add( (prot, org) )
+    return d
+
+def get_single_orthologs(infile):
+    orths = {}
+    d = parse_orthologs(infile)
+    singles = [x for x in d
+               if len(d[x]) == 2 and
+               len({y[1] for y in d[x]}) == 2]
+    for k in singles:
+        reference = [x for x in d[k] if x[1] == 'reference'][0][0]
+        target = [x for x in d[k] if x[1] == 'target'][0][0]
+        
+        orths[target] = reference
+    
+    return orths
+
+if __name__ == "__main__":
+    import sys
+    options = get_options()
+
+    # Load the orthologs, if provided
+    overall = set()
+    for infile in options.orthologs:
+        orthologs = get_single_orthologs(infile)
+        if len(overall) == 0:
+            for k in orthologs.values():
+                overall.add(k)
+        else:
+            overall = overall.intersection(orthologs.values())
+    for k in sorted(overall):
+        print(k)

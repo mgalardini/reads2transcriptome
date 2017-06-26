@@ -33,13 +33,16 @@ def get_options():
     # create the top-level parser
     description = "Extract putative transcripts from a genbank file"
     parser = argparse.ArgumentParser(description = description,
-                                     prog = 'gbk2genes')
+                                     prog = 'gff2genes')
     parser.add_argument('ingff', action='store',
                         help='Input GFF file')
 
     parser.add_argument('--orthologs', action='store',
         default=None,
         help='Use 1:1 orthologs to rename transcripts')
+    parser.add_argument('--allowed-orthologs', action='store',
+        default=None,
+        help='Only use this reference genes')
     
     parser.add_argument('--synonym', action='store_true',
         default=False,
@@ -63,7 +66,7 @@ def parse_orthologs(infile):
         d[orth].add( (prot, org) )
     return d
 
-def get_single_orthologs(infile):
+def get_single_orthologs(infile, allowed=None):
     orths = {}
     d = parse_orthologs(infile)
     singles = [x for x in d
@@ -73,6 +76,9 @@ def get_single_orthologs(infile):
         reference = [x for x in d[k] if x[1] == 'reference'][0][0]
         target = [x for x in d[k] if x[1] == 'target'][0][0]
         
+        if allowed is not None and reference not in allowed:
+            continue
+
         orths[target] = reference
     
     return orths
@@ -85,7 +91,11 @@ if __name__ == "__main__":
     # Load the orthologs, if provided
     orthologs = {}
     if options.orthologs is not None:
-        orthologs = get_single_orthologs(options.orthologs)
+        if options.allowed_orthologs is not None:
+            allowed = {x.rstrip() for x in open(options.allowed_orthologs)}
+        else:
+            allowed = None
+        orthologs = get_single_orthologs(options.orthologs, allowed=allowed)
     
     # Read the input gbk
     unnamed = 1
@@ -112,6 +122,9 @@ if __name__ == "__main__":
                     name = 'unnamed_%d' % unnamed
                     unnamed += 1
 
+            if options.allowed_orthologs is not None:
+                if name not in orthologs:
+                    continue
             # Use orthology, whenever possible
             name = orthologs.get(name, name)
 
