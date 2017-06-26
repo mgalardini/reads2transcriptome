@@ -37,6 +37,10 @@ def get_options():
     parser.add_argument('ingff', action='store',
                         help='Input GFF file')
 
+    parser.add_argument('--orthologs', action='store',
+        default=None,
+        help='Use 1:1 orthologs to rename transcripts')
+    
     parser.add_argument('--synonym', action='store_true',
         default=False,
         help='Use gene synonym identifier [Default: locus_tag]')
@@ -49,11 +53,40 @@ def get_options():
 
     return parser.parse_args()
 
+def parse_orthologs(infile):
+    d = {}
+    for l in open(infile):
+        if l.strip().startswith('#'):
+            continue
+        orth, prot, org = l.strip().split()
+        d[orth] = d.get(orth, set())
+        d[orth].add( (prot, org) )
+    return d
+
+def get_single_orthologs(infile):
+    orths = {}
+    d = parse_orthologs(infile)
+    singles = [x for x in d
+               if len(d[x]) == 2 and
+               len({y[1] for y in d[x]}) == 2]
+    for k in singles:
+        reference = [x for x in d[k] if x[1] == 'reference'][0][0]
+        target = [x for x in d[k] if x[1] == 'target'][0][0]
+        
+        orths[target] = reference
+    
+    return orths
+
 if __name__ == "__main__":
     from BCBio import GFF
     import sys
     options = get_options()
 
+    # Load the orthologs, if provided
+    orthologs = {}
+    if options.orthologs is not None:
+        orthologs = get_single_orthologs(options.orthologs)
+    
     # Read the input gbk
     unnamed = 1
     for s in GFF.parse(options.ingff):
@@ -78,6 +111,9 @@ if __name__ == "__main__":
                 except:
                     name = 'unnamed_%d' % unnamed
                     unnamed += 1
+
+            # Use orthology, whenever possible
+            name = orthologs.get(name, name)
 
             # Sequence
             seq = str(f.extract(s).seq)

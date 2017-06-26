@@ -11,6 +11,7 @@ TRIMMOMATIC = $(TRIMDIR)/trimmomatic-0.36.jar
 ADAPTERS = $(TRIMDIR)/adapters/TruSeq3-SE.fa
 MORETRIMMING = 
 QCDIR = $(CURDIR)/QC
+ORTHOLOGS = 
 QDIR = $(CURDIR)/kallisto
 KRAKENPARAMS = --fastq-input --gzip-compressed
 KRAKENDB = kraken
