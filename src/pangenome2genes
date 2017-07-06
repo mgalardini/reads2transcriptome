@@ -82,6 +82,9 @@ if __name__ == "__main__":
         if '\t' in k:
             for k1 in k.split('\t'):
                 add[k1] = v
+        if '___' in k:
+            for k1 in k.split('\t'):
+                add[k1.split('___')[0]] = v
     for k, v in add.items():
         gnames[k] = v
     genes[options.priority] = {}
@@ -123,6 +126,9 @@ if __name__ == "__main__":
                 if '\t' in k:
                     for k1 in k.split('\t'):
                         add[k1] = v
+                if '___' in k:
+                    for k1 in k.split('\t'):
+                        add[k1.split('___')[0]] = v
             for k, v in add.items():
                 gnames[k] = v
             if strain not in genes or len(genes[strain]) == 0:
