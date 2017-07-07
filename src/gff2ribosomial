@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+# Copyright (C) <2015> EMBL-European Bioinformatics Institute
+
+# This program is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation, either version 3 of
+# the License, or (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+
+# Neither the institution name nor the name align_upstreams can
+# be used to endorse or promote products derived from this
+# software without prior written permission. For written
+# permission, please contact <marco@ebi.ac.uk>.
+
+# Products derived from this software may not be called
+# align_upstreams nor may align_upstreams appear in their names
+# without prior written permission of the developers.
+# You should have received a copy of the GNU General Public
+# License along with this program. If not, see
+# <http://www.gnu.org/licenses/>.
+
+__author__ = "Marco Galardini"
+__version__ = "0.0.1"
+
+def get_options():
+    import argparse
+
+    # create the top-level parser
+    description = "Extract ribosomial transcripts from a genbank file"
+    parser = argparse.ArgumentParser(description = description,
+                                     prog = 'gff2ribosomial')
+    parser.add_argument('ingff', action='store',
+                        help='Input GFF file')
+
+    parser.add_argument('--version', action='version',
+                         version='%(prog)s '+__version__)
+
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    from BCBio import GFF
+    import sys
+    options = get_options()
+
+    # Read the input gbk
+    unnamed = 1
+    for s in GFF.parse(options.ingff):
+        for f in s.features:
+            if f.type not in set(('CDS', 'rRNA', 'tRNA')):
+                continue
+            if f.type == 'CDS':
+                if 'GO_function' in f.qualifiers:
+                    if len([x for x in f.qualifiers['GO_function']
+                            if 'GO:0003735' in x]) == 0:
+                        continue
+                else:
+                    continue
+            # Name
+            # Try first with the locus_tag
+            try:
+                name = f.qualifiers['locus_tag'][0]
+            except:
+                name = 'unnamed_%d' % unnamed
+                unnamed += 1
+
+            # Sequence
+            seq = str(f.extract(s).seq)
+
+            print('>%s\n%s' % (name, seq))
