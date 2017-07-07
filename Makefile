@@ -57,8 +57,16 @@ index: $(INDEX)
 
 # Quantification
 QUANTS = $(QDIR)/abundance.h5
+SAM = $(QDIR).sam
+INPUT = $(QDIR).input.txt
+MAPPED = $(QDIR).mapped.txt
+UNMAPPED = $(QDIR).unmapped.txt
 $(QUANTS): $(INDEX) $(QDIR) $(READ)
-	java -jar $(TRIMMOMATIC) SE $(READ) /dev/stdout ILLUMINACLIP:$(ADAPTERS):2:30:10 $(MORETRIMMING) | kallisto quant -b 100 -i $(INDEX) -o $(QDIR) --single -l $(FRAGMENT) -s $(FRAGMENTSD) /dev/stdin
+	java -jar $(TRIMMOMATIC) SE $(READ) /dev/stdout ILLUMINACLIP:$(ADAPTERS):2:30:10 $(MORETRIMMING) | kallisto quant -b 100 -i $(INDEX) -o $(QDIR) --single -l $(FRAGMENT) -s $(FRAGMENTSD) /dev/stdin --pseudobam > $(SAM)
+	zcat $(READ) | awk '{s++}END{print s/4}' > $(INPUT)
+	samtools view -S -F 4 $(SAM) | uniq | wc -l > $(MAPPED)
+	samtools view -S -f 4 $(SAM) | uniq | wc -l > $(UNMAPPED)
+	-rm $(SAM)
 quantify: $(QUANTS)
 
 clean:
