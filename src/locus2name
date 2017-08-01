@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+__author__ = "Marco Galardini"
+
+def get_options():
+    import argparse
+
+    # create the top-level parser
+    description = "Get locus tag to gene name conversion from a GenBank file"
+    parser = argparse.ArgumentParser(description=description,
+                                     prog='locus2name')
+    
+    parser.add_argument('genbank', action='store')
+    
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    import sys
+    import os
+    from Bio import SeqIO
+
+    options = get_options()
+
+    d = {}
+    unnamed = 1
+    for s in SeqIO.parse(options.genbank, 'genbank'):
+        for f in s.features:
+            locus = f.qualifiers.get('locus_tag', [''])[0]
+            if locus == '':
+                locus = 'nolocus_%d' % unnamed
+                unnamed += 1
+            gene = f.qualifiers.get('gene', [''])[0]
+            if gene == '':
+                continue
+            d[locus] = gene
+
+    for l, g in d.items():
+        print('%s\t%s' % (l, g))
