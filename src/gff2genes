@@ -96,7 +96,10 @@ if __name__ == "__main__":
         else:
             allowed = None
         orthologs = get_single_orthologs(options.orthologs, allowed=allowed)
-    
+   
+    # if orthologs are used, genes should be in the same order in every strain
+    genes = []
+
     # Read the input gbk
     unnamed = 1
     for s in GFF.parse(options.ingff):
@@ -131,4 +134,11 @@ if __name__ == "__main__":
             # Sequence
             seq = str(f.extract(s).seq)
 
+            if options.orthologs is None:
+                print('>%s\n%s' % (name, seq))
+            else:
+                genes.append((name, seq))
+
+    if options.orthologs is not None:
+        for name, seq in sorted(genes, key=lambda x: x[0]):
             print('>%s\n%s' % (name, seq))
