@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+def get_options():
+    import argparse
+
+    description = 'Remove some samples from the samples table'
+    parser = argparse.ArgumentParser(description=description,
+                                     prog='purge_sample_table')
+
+    parser.add_argument('table', action='store',
+                        help='Samples table')
+    parser.add_argument('discard', action='store',
+                        help='Samples to be discarded')
+
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    options = get_options()
+
+    import sys
+    import pandas as pd
+
+    t = pd.read_table(options.table, sep=' ').set_index('sample')
+    t.drop([x.rstrip()
+            for x in open(options.discard)
+            if x.rstrip() in t.index],
+           inplace=True)
+    t.reset_index().to_csv(sys.stdout, sep='\t', index=False)
