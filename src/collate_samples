@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+def get_options():
+    import argparse
+
+    description = 'Collate kallisto outputs'
+    parser = argparse.ArgumentParser(description=description,
+                                     prog='collate_samples')
+
+    parser.add_argument('table', action='store',
+                        help='Samples table')
+    parser.add_argument('idir', action='store',
+                        help='Base directory')
+    parser.add_argument('kdir', action='store',
+                        help='Kallisto results directory name')
+
+    parser.add_argument('--metric', action='store',
+                        default='est_counts',
+                        help='Abundance metric [Default: est_counts]')
+    
+    return parser.parse_args()
+
+if __name__ == "__main__":
+    options = get_options()
+
+    import os
+    import sys
+    import pandas as pd
+
+    r = pd.read_table(options.table, index_col='sample')
+
+    m = None
+    for s in r.index:
+        x = pd.read_table(os.path.join(options.idir,
+                          s,
+                          options.kdir,
+                          'abundance.tsv'),
+                          index_col=0)[options.metric]
+        x.name = s
+        if m is None:
+            m = x.to_frame()
+        else:
+            m = m.join(x.to_frame(), how='inner')
+
+    m.to_csv(sys.stdout, sep='\t')
