@@ -43,6 +43,9 @@ def get_options():
     parser.add_argument('--allowed-orthologs', action='store',
         default=None,
         help='Only use this reference genes')
+    parser.add_argument('--reference', action='store_true',
+        default=False,
+        help='Only output 1:1 orthologs, ignored with --allowed-orthologs')
     
     parser.add_argument('--synonym', action='store_true',
         default=False,
@@ -129,7 +132,12 @@ if __name__ == "__main__":
                 if name not in orthologs:
                     continue
             # Use orthology, whenever possible
-            name = orthologs.get(name, name)
+            if options.allowed_orthologs is None and options.reference:
+                if name not in orthologs:
+                    continue
+                name = orthologs[name]
+            else:
+                name = orthologs.get(name, name)
 
             # Sequence
             seq = str(f.extract(s).seq)
