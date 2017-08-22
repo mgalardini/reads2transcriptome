@@ -42,6 +42,10 @@ def get_options():
     parser.add_argument('priority', action='store',
                         help='Priority strain (i.e. Roary\'s column)')
     
+    parser.add_argument('--reference', action='store',
+                        default=None,
+                        help='Only consider genes from a specific organism [Default: full pangenome]')
+    
     parser.add_argument('--version', action='version',
                          version='%(prog)s '+__version__)
 
@@ -64,6 +68,12 @@ if __name__ == "__main__":
     # Drop the other info columns
     roary.drop(list(roary.columns[:13]), axis=1, inplace=True) 
 
+    # Focus on a "reference" strain only?
+    if options.reference is not None:
+        roary = roary.loc[roary[options.reference].dropna().index]
+        roary.index = roary[options.reference]
+        roary.index.name = 'Gene'
+    
     # Prepare all the GFF files parsers
     parsers = {}
     for column in roary.columns:
