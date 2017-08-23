@@ -39,8 +39,17 @@ write.table(assay(tvst),
 	    sep="\t")
 
 # correct for batch effects
-batch <- removeBatchEffect(assay(tvst),
-                           batch=s2c$batch)
+# optionally preserve treatment conditions
+design <- model.matrix(~strain, s2c)
+if (as.logical(args[6]))
+{
+  batch <- removeBatchEffect(assay(tvst),
+                             batch=s2c$batch,
+			     design=design)
+} else {
+  batch <- removeBatchEffect(assay(tvst),
+                             batch=s2c$batch)
+}
 write.table(batch,
 	    file=args[5],
 	    sep="\t")
