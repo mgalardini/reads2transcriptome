@@ -11,6 +11,10 @@ def get_options():
                         help='Samples table')
     parser.add_argument('discard', action='store',
                         help='Samples to be discarded')
+    
+    parser.add_argument('--reference', action='append',
+        default=[],
+        help='Strain to be used to add the "reference" column [Default: don\'t add this column]')
 
     return parser.parse_args()
 
@@ -25,4 +29,11 @@ if __name__ == "__main__":
             for x in open(options.discard)
             if x.rstrip() in t.index],
            inplace=True)
+    if len(options.reference) != 0:
+        t['reference'] = [True if x in options.reference
+                          else False
+                          for x in t['strain']]
+        t['mstrain'] = ['reference' if x in options.reference
+                        else x
+                        for x in t['strain']]
     t.reset_index().to_csv(sys.stdout, sep='\t', index=False)
