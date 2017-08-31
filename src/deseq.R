@@ -2,14 +2,18 @@
 
 library("tximport")
 library('DESeq2')
+library('BiocParallel')
 
 args = commandArgs(trailingOnly=TRUE)
 
 # rna samples
 # directory
 # kallisto directory
+# p-val threshold
+# log(FC) threshold (absolute)
+# number of cores
 
-# import kallisto's results
+# prepare samples table
 s2c <- read.table(file.path(args[1]),
                   header=TRUE,
                   stringsAsFactors=TRUE)
@@ -19,8 +23,8 @@ kal_dirs <- sapply(s2c$sample,
 					  args[3],
 					  "abundance.tsv"))
 s2c <- dplyr::mutate(s2c, path = kal_dirs)
-s2c$ibatch = as.numeric(factor(s2c$batch))
 
+# import kallisto's counts
 txi.kallisto <- tximport(s2c$path,
 			 type="kallisto",
 			 txOut=TRUE,
@@ -32,19 +36,39 @@ for (col in colnames(counts)){
 }
 rownames(s2c) <- colnames(counts)
 
+# run DESeq2
 dds <- DESeqDataSetFromMatrix(counts,
 			      s2c,
 	     	              ~mstrain)
-dds <- DESeq(dds)
+multicoreParam <- MulticoreParam(workers=as.numeric(args[6]))
+dds <- DESeq(dds,
+	     parallel=TRUE,
+	     BPPARAM=multicoreParam)
 
+# overall results
+res <- results(dds,
+	       alpha=as.numeric(args[4]),
+	       lfcThreshold=as.numeric(args[5]),
+	       altHypothesis='greaterAbs',
+	       parallel=TRUE,
+	       BPPARAM=multicoreParam)
+write.csv(as.data.frame(res),
+	  file='overall.tsv',
+          sep='')
+# strain's contrasts
 for(i in 2:length(unique(s2c$mstrain)))
 {
     res <- results(dds,
                    contrast=c('mstrain',
-                   toString(unique(s2c$mstrain)[i]),
-                   'reference'))
+                              toString(unique(s2c$mstrain)[i]),
+                              'reference'),
+		   alpha=as.numeric(args[4]),
+		   lfcThreshold=as.numeric(args[5]),
+		   altHypothesis='greaterAbs',
+		   parallel=TRUE,
+		   BPPARAM=multicoreParam)
     write.csv(as.data.frame(res),
               file=paste(toString(unique(s2c$mstrain)[i]),
                          '.tsv',
               sep=''))    
-} 
+}
